@@ -7,6 +7,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.Point import Point
 import argparse
 import csv
+from numpy import array
 
 def create_time_axis():
     time_axis = pg.AxisItem(orientation='bottom')
@@ -35,9 +36,22 @@ def start_application(args):
     layout = pg.GraphicsLayout()
     win.setCentralItem(layout)
 
-    data = get_csv(args.in_filename)
+    (xs, ys) = get_csv(args.in_filename)
+    # Rewrite time axis based on Fs as it's too granular...
+    xs = np.linspace(0, float(len(xs))/float(args.sample_rate), len(xs))
+    data = (xs, ys)
     final_event_time = data[0][-1]
-    print(final_event_time)
+    print("File finishes at: {} sec".format(final_event_time))
+
+    #with open('composite_fs20mhz.csv', 'w') as csvfile:
+    #    the_writer = csv.writer(csvfile)
+    #    for v in ys:
+    #        the_writer.writerow([v])
+
+    #with open('composite_fs20mhz_float32.bin', 'wb') as binfile:
+    #    float_array = array(ys, 'float32')
+    #    float_array.tofile(binfile)
+    #    binfile.close()
 
     noscroll_viewbox = pg.ViewBox()
     noscroll_viewbox.setMouseEnabled(x=False, y=False)
@@ -88,7 +102,8 @@ def start_application(args):
 
 parser = argparse.ArgumentParser(description='Plot and perform metrics on scheduler dumps')
 
-parser.add_argument('in_filename', help='Filename of scheduler dump to process')
+parser.add_argument('in_filename', help='Filename of oscilloscope dump to process')
+parser.add_argument('sample_rate', help='Sample rate')
 
 if __name__ == '__main__':
     args = parser.parse_args()
